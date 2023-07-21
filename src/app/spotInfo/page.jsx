@@ -5,8 +5,10 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   flexRender, // 渲染表格內容用
 } from "@tanstack/react-table";
+import { cloneDeep } from "lodash-es";
 import SelectCountyAndDistrict from "../components/SelectCountyAndDistrict";
 import { getYoubikeData } from "../customHooks/fetchData";
 import { feedbackMessage } from "../utilities/feedbackMessage";
@@ -33,6 +35,10 @@ export default function SpotInfo() {
       accessorKey: "bemp",
     },
   ];
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [columnFilters, setColumnFilters] = useState([
+    { id: "ar", value: searchKeyword },
+  ]);
   // TODO: 還不太知道為什麼 sorting 表格的時候要設這個 state，不過官方範例這樣寫，就先這樣用囉
   const [sorting, setSorting] = useState([]);
   // 選擇縣市 | 要傳入 component 供 component 使用
@@ -42,6 +48,13 @@ export default function SpotInfo() {
   // 全選行政區 | 要傳入 component 供 component 使用
   const [allDistrictsChecked, setAllDistrictsChecked] = useState(true);
 
+  function filterInputHandler(value) {
+    setSearchKeyword(value);
+    const cf = cloneDeep(columnFilters);
+    cf[0].value = value;
+    setColumnFilters(cf);
+  }
+
   const table = useReactTable({
     // 最基礎的表格，須引入下方三行(data, columns, getCoreRowModel)
     data, // 輸入表格的資料
@@ -50,8 +63,12 @@ export default function SpotInfo() {
     // 點擊 thead 可排序，須撰寫下方兩行，並於 state 內設置 sorting 屬性
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
+    // 透過 input 搜索指定欄位，須撰寫下方兩行，並於 state 內設置 columnFilters 屬性
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: setColumnFilters,
     state: {
       sorting,
+      columnFilters,
     },
   });
 
@@ -70,58 +87,71 @@ export default function SpotInfo() {
         setAllDistrictsChecked={setAllDistrictsChecked}
       />
       {data && selectedCounty === "臺北市" ? (
-        <table>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {/* 排序時的符號 */}
-                    {
-                      { asc: "🔼", desc: "🔽" }[
-                        header.column.getIsSorted() ?? null
-                      ]
-                    }
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => {
-              let flag = false;
-              selectedDistricts.forEach(({ name, checked }) => {
-                if (name === row.original.sarea && checked) {
-                  flag = true;
+        <>
+          {/* 搜尋站點名稱 */}
+          <div style={{ margin: "10px" }}>
+            <label htmlFor="searchSpotInput">搜尋站點名稱</label>
+            <input
+              type="text"
+              id="searchSpotInput"
+              onChange={(e) => filterInputHandler(e.target.value)}
+              value={searchKeyword}
+            />
+          </div>
+          {/* 符合的站點列表 */}
+          <table>
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {/* 排序時的符號 */}
+                      {
+                        { asc: "🔼", desc: "🔽" }[
+                          header.column.getIsSorted() ?? null
+                        ]
+                      }
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => {
+                let flag = false;
+                selectedDistricts.forEach(({ name, checked }) => {
+                  if (name === row.original.sarea && checked) {
+                    flag = true;
+                  }
+                });
+                if (flag) {
+                  return (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map((cell) => {
+                        return (
+                          <td key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
                 }
-              });
-              if (flag) {
-                return (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => {
-                      return (
-                        <td key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              }
-              return null;
-            })}
-          </tbody>
-        </table>
+                return null;
+              })}
+            </tbody>
+          </table>
+        </>
       ) : isLoading ? (
         <p>{feedbackMessage.loading}</p>
       ) : null}
