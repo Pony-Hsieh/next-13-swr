@@ -7,6 +7,7 @@ import {
   getSortedRowModel,
   flexRender, // 渲染表格內容用
 } from "@tanstack/react-table";
+import SelectCountyAndDistrict from "../components/SelectCountyAndDistrict";
 import { getYoubikeData } from "../customHooks/fetchData";
 import { feedbackMessage } from "../utilities/feedbackMessage";
 
@@ -34,6 +35,12 @@ export default function SpotInfo() {
   ];
   // TODO: 還不太知道為什麼 sorting 表格的時候要設這個 state，不過官方範例這樣寫，就先這樣用囉
   const [sorting, setSorting] = useState([]);
+  // 選擇縣市 | 要傳入 component 供 component 使用
+  const [selectedCounty, setSelectedCounty] = useState("");
+  // 選擇行政區 | 要傳入 component 供 component 使用
+  const [selectedDistricts, setSelectedDistricts] = useState([]);
+  // 全選行政區 | 要傳入 component 供 component 使用
+  const [allDistrictsChecked, setAllDistrictsChecked] = useState(true);
 
   const table = useReactTable({
     // 最基礎的表格，須引入下方三行(data, columns, getCoreRowModel)
@@ -54,6 +61,14 @@ export default function SpotInfo() {
 
   return (
     <div style={{ height: "100vh" }}>
+      <SelectCountyAndDistrict
+        selectedCounty={selectedCounty}
+        setSelectedCounty={setSelectedCounty}
+        selectedDistricts={selectedDistricts}
+        setSelectedDistricts={setSelectedDistricts}
+        allDistrictsChecked={allDistrictsChecked}
+        setAllDistrictsChecked={setAllDistrictsChecked}
+      />
       {data ? (
         <table>
           <thead>
