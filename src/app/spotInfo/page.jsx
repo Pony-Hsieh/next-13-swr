@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   flexRender, // 渲染表格內容用
 } from "@tanstack/react-table";
 import { getYoubikeData } from "../customHooks/fetchData";
@@ -14,10 +16,12 @@ export default function SpotInfo() {
     {
       header: "行政區",
       accessorKey: "sarea",
+      enableSorting: false,
     },
     {
       header: "站點名稱",
       accessorKey: "ar",
+      enableSorting: false,
     },
     {
       header: "可借車輛",
@@ -28,11 +32,20 @@ export default function SpotInfo() {
       accessorKey: "bemp",
     },
   ];
+  // TODO: 還不太知道為什麼 sorting 表格的時候要設這個 state，不過官方範例這樣寫，就先這樣用囉
+  const [sorting, setSorting] = useState([]);
+
   const table = useReactTable({
     // 最基礎的表格，須引入下方三行(data, columns, getCoreRowModel)
     data, // 輸入表格的資料
     columns, // thead 的欄位
     getCoreRowModel: getCoreRowModel(),
+    // 點擊 thead 可排序，須撰寫下方兩行，並於 state 內設置 sorting 屬性
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+    },
   });
 
   if (error) {
@@ -55,6 +68,12 @@ export default function SpotInfo() {
                       header.column.columnDef.header,
                       header.getContext()
                     )}
+                    {/* 排序時的符號 */}
+                    {
+                      { asc: "🔼", desc: "🔽" }[
+                        header.column.getIsSorted() ?? null
+                      ]
+                    }
                   </th>
                 ))}
               </tr>
