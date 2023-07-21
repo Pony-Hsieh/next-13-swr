@@ -9,6 +9,7 @@ import {
   flexRender, // 渲染表格內容用
 } from "@tanstack/react-table";
 import { cloneDeep } from "lodash-es";
+import { DebounceInput } from "react-debounce-input";
 import SelectCountyAndDistrict from "../components/SelectCountyAndDistrict";
 import { getYoubikeData } from "../customHooks/fetchData";
 import { feedbackMessage } from "../utilities/feedbackMessage";
@@ -91,7 +92,7 @@ export default function SpotInfo() {
           {/* 搜尋站點名稱 */}
           <div style={{ margin: "10px" }}>
             <label htmlFor="searchSpotInput">搜尋站點名稱</label>
-            <input
+            <DebounceInput
               type="text"
               id="searchSpotInput"
               onChange={(e) => filterInputHandler(e.target.value)}
