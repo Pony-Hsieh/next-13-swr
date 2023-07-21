@@ -69,7 +69,7 @@ export default function SpotInfo() {
         allDistrictsChecked={allDistrictsChecked}
         setAllDistrictsChecked={setAllDistrictsChecked}
       />
-      {data ? (
+      {data && selectedCounty === "臺北市" ? (
         <table>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -95,15 +95,31 @@ export default function SpotInfo() {
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {table.getRowModel().rows.map((row) => {
+              let flag = false;
+              selectedDistricts.forEach(({ name, checked }) => {
+                if (name === row.original.sarea && checked) {
+                  flag = true;
+                }
+              });
+              if (flag) {
+                return (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              }
+              return null;
+            })}
           </tbody>
         </table>
       ) : isLoading ? (
