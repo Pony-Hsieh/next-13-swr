@@ -134,12 +134,17 @@ export default function SelectCountyAndDistrict(props) {
                 onChange={(e) => {
                   const selectedDistrict = e.target.value;
                   const newDistricts = cloneDeep(selectedDistricts);
+                  let flag = true;
                   newDistricts.forEach((district) => {
                     if (district.name === selectedDistrict) {
                       district.checked = e.target.checked;
                     }
+                    if (!district.checked) {
+                      flag = false;
+                    }
                   });
                   setSelectedDistricts(newDistricts);
+                  setAllDistrictsChecked(flag);
                 }}
               />
               <label htmlFor={`districtList${name}`}>{name}</label>
